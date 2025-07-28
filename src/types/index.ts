@@ -2,7 +2,7 @@
 export type WorkItemType = 'all' | 'initiative' | 'epic' | 'story' | 'task' | 'bug'
 
 // Content generation types
-export type ContentType = 'quarterly-presentation' | 'customer-webinar' | 'feature-newsletter' | 'technical-documentation' | 'stakeholder-update'
+export type ContentType = 'quarterly-presentation' | 'customer-webinar' | 'feature-newsletter' | 'technical-documentation' | 'stakeholder-update' | 'engineering-highlights'
 
 export interface ContentGenerationRequest {
   projectKey: string

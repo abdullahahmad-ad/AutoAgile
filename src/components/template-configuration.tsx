@@ -16,7 +16,7 @@ interface TemplateConfigurationProps {
 }
 
 type ConfigSection = 'work-items' | 'content-generation' | 'field-extraction'
-type ContentTemplateType = 'quarterly-presentation' | 'customer-webinar' | 'feature-newsletter'
+type ContentTemplateType = 'quarterly-presentation' | 'customer-webinar' | 'feature-newsletter' | 'technical-documentation' | 'stakeholder-update' | 'engineering-highlights'
 type WorkItemConfigType = 'epic' | 'story' | 'initiative'
 
 export function TemplateConfiguration({ onClose }: TemplateConfigurationProps) {
@@ -450,7 +450,10 @@ export function TemplateConfiguration({ onClose }: TemplateConfigurationProps) {
                     {[
                       { type: 'quarterly-presentation', title: 'Quarterly Presentation', description: 'Executive presentations for quarterly reviews' },
                       { type: 'customer-webinar', title: 'Customer Webinar', description: 'Customer-facing webinar content' },
-                      { type: 'feature-newsletter', title: 'Feature Newsletter', description: 'Internal feature announcements' }
+                      { type: 'feature-newsletter', title: 'Feature Newsletter', description: 'Internal feature announcements' },
+                      { type: 'technical-documentation', title: 'Technical Documentation', description: 'Technical documentation and specifications' },
+                      { type: 'stakeholder-update', title: 'Stakeholder Update', description: 'Progress update for stakeholders' },
+                      { type: 'engineering-highlights', title: 'Engineering Highlights', description: 'Key engineering achievements and updates' }
                     ].map((item) => (
                       <button
                         key={item.type}

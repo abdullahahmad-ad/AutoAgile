@@ -70,6 +70,12 @@ export function InstructionEditor({ onClose, initialContentType }: InstructionEd
         return { title: 'Customer Webinar', icon: '🎯' }
       case 'feature-newsletter':
         return { title: 'Feature Newsletter', icon: '📰' }
+      case 'technical-documentation':
+        return { title: 'Technical Documentation', icon: '📋' }
+      case 'stakeholder-update':
+        return { title: 'Stakeholder Update', icon: '📈' }
+      case 'engineering-highlights':
+        return { title: 'Engineering Highlights', icon: '🔧' }
     }
   }
 

@@ -22,6 +22,7 @@ interface ContentGeneratorProps {
 }
 
 export function ContentGenerator({
+  jiraConnection,
   devsAIConnection,
   workItem,
   contentType,
@@ -69,6 +70,12 @@ export function ContentGenerator({
           title: 'Stakeholder Update',
           description: 'Progress update for stakeholders',
           icon: '📈'
+        }
+      case 'engineering-highlights':
+        return {
+          title: 'Engineering Highlights',
+          description: 'Project highlights and engineering achievements',
+          icon: '🔧'
         }
       default:
         return {
@@ -250,7 +257,10 @@ Do NOT include any headings like "# Title" or "## The Why". Just provide the tit
             contentType,
             workItem: workItem,
             useDevsAI: true,
-            apiToken: apiToken
+            apiToken: apiToken,
+            context: {
+              jiraConnection
+            }
           })
         })
 
@@ -290,10 +300,9 @@ Do NOT include any headings like "# Title" or "## The Why". Just provide the tit
     } finally {
       setIsGenerating(false)
     }
-  }, [devsAIConnection, contentType, workItem.key, workItem.summary, workItem.issueType, workItem.status, workItem.project, deliveryQuarter, workItem.description])
+  }, [devsAIConnection, contentType, workItem.key, workItem.summary, workItem.issueType, workItem.status, workItem.project, deliveryQuarter, workItem.description, jiraConnection])
 
   const generateMockContent = (type: ContentType, item: JiraWorkItem): string => {
-    // Helper function to extract Problem Description and Solution Description sections
     const extractProblemAndSolution = (description: any): { problemDescription: string; solutionDescription: string } => {
       let fullText = ''
       
@@ -629,6 +638,14 @@ All identified risks remain within acceptable tolerance levels. Contingency plan
 ## Next Steps
 
 Focus continues on delivering high-quality, user-centric functionality that addresses core business requirements. Regular stakeholder updates will ensure continued alignment with strategic objectives.`
+
+      case 'engineering-highlights':
+        const engineeringTitle = item.summary.replace(/^\d{4}Q\d\s*-\s*\[[^\]]+\]\s*-\s*/, '').trim();
+        return `${engineeringTitle}
+
+The project embarked on a challenging journey to address complex technical hurdles and redefine our engineering capabilities. Initially scoped to tackle [specific technical challenge], the project faced significant obstacles including [key obstacles]. Under the leadership of [team leads], and with contributions from [key contributors], the team navigated through technical debt and made pivotal architectural decisions. The collaborative efforts of the engineering team were instrumental in overcoming these challenges, ensuring a robust and scalable solution.
+
+Our engineering team has developed an innovative solution that leverages cutting-edge technology to deliver seamless user experiences. The implementation introduces intelligent automation, enhanced data processing capabilities, and intuitive interface improvements that significantly reduce time-to-value for our customers. This advancement positions us as the industry leader in providing comprehensive, user-centric solutions that drive measurable business outcomes.`
 
       default:
         return `# ${item.summary.replace(/^\\d{4}Q\\d\\s*-\\s*\\[[^\\]]+\\]\\s*-\\s*/, '').trim()}

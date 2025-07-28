@@ -17,6 +17,13 @@ export async function POST(request: NextRequest) {
       template: context?.template
     })
 
+    console.log('🚀 Generate content API called with:')
+    console.log('📋 Content Type:', contentType)
+    console.log('📊 Work Item:', workItem)
+    console.log('🔧 Use DevS.ai:', useDevsAI)
+    console.log('🔑 Has API Token:', !!apiToken)
+    console.log('📝 Context:', context)
+
     // Validate required fields
     if (!prompt || !contentType) {
       console.error(`[AI-DEBUG] ${new Date().toISOString()} - Missing required fields`, {
@@ -28,6 +35,66 @@ export async function POST(request: NextRequest) {
         error: 'Prompt and content type are required'
       }, { status: 400 })
     }
+
+    // For engineering highlights, enhance workItem with linked stories if it's an epic
+    // Do this BEFORE any AI generation (DevS.ai or mock) so all paths have access to linked stories
+    let enhancedWorkItem = workItem
+    let enhancedPrompt = prompt
+    if (contentType === 'engineering-highlights' && workItem && typeof workItem === 'object') {
+      const workItemObj = workItem as any
+      console.log('🔍 Checking if work item is an epic for linked stories fetch')
+      console.log('📊 Work item type:', workItemObj.issueType)
+
+      if (workItemObj.issueType?.toLowerCase() === 'epic' && workItemObj.key) {
+        console.log('🎯 Epic detected, fetching linked stories...')
+        try {
+          const linkedStoriesResponse = await fetch(`${request.nextUrl.origin}/api/jira/get-linked-stories`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jiraConnection: context?.jiraConnection,
+              epicKey: workItemObj.key
+            }),
+          })
+
+          if (linkedStoriesResponse.ok) {
+            const linkedStoriesResult = await linkedStoriesResponse.json()
+            console.log('✅ Successfully fetched linked stories:', linkedStoriesResult.totalCount)
+            console.log('📋 Linked stories details:', linkedStoriesResult.linkedStories)
+
+            // Enhance the work item with linked stories
+            enhancedWorkItem = {
+              ...workItemObj,
+              linkedStories: linkedStoriesResult.linkedStories
+            }
+
+            // Update the prompt to include linked stories information for DevS.ai
+            const storyDetails = linkedStoriesResult.linkedStories.map((story: any) =>
+                `- ${story.summary} (Assignee: ${story.assignee || 'Unassigned'}, Status: ${story.status}, Type: ${story.issueType})`
+            ).join('\n')
+
+            enhancedPrompt = `${prompt}
+
+IMPORTANT: This is an EPIC with the following linked stories/tasks that should be referenced in the engineering highlights:
+
+**Linked Stories/Tasks:**
+${storyDetails}
+
+Please ensure the generated engineering highlights specifically mention and reference these actual stories/tasks with their real summaries and assignees, not generic placeholder content.`
+
+            console.log('📝 Enhanced prompt with linked stories for AI generation')
+            console.log('🔗 Story details added to prompt:', storyDetails)
+          } else {
+            console.log('⚠️ Failed to fetch linked stories, proceeding without them')
+          }
+        } catch (error) {
+          console.log('⚠️ Error fetching linked stories:', error)
+        }
+      }
+    }
+
 
     // Handle DevS.ai requests
     if (useDevsAI && apiToken) {
@@ -50,7 +117,7 @@ export async function POST(request: NextRequest) {
                 },
                 {
                   role: 'user',
-                  content: prompt
+                  content: enhancedPrompt
                 }
               ],
               model: 'gpt-4',
@@ -58,6 +125,9 @@ export async function POST(request: NextRequest) {
             }
           }),
         })
+
+        console.log('🤖 DevS.ai prompt being sent:')
+        console.log('📤 Prompt content:', enhancedPrompt)
 
         if (devsAIResponse.ok) {
           const devsAIData = await devsAIResponse.json()
@@ -117,7 +187,7 @@ export async function POST(request: NextRequest) {
         
         const result = await aiService.generateContent(
           contentType as any, // Cast to WorkItemType
-          prompt,
+            enhancedPrompt,
           { model: aiProvider }
         )
         
@@ -151,7 +221,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Mock content generation based on content type and actual user prompt
-    const mockContent = generateMockContent(contentType, workItem, prompt)
+    const mockContent = generateMockContent(contentType, enhancedWorkItem, enhancedPrompt)
 
     return NextResponse.json({
       success: true,
@@ -484,6 +554,33 @@ This initiative includes the following major components:
 
 ---
 *Generated from user requirements on ${new Date().toISOString()}*`
+
+    case 'engineering-highlights':
+      console.log('🔍 Engineering highlights case triggered on server');
+      console.log('📊 Work item data:', { key: workItemKey, summary: workItemSummary, type: workItemType });
+
+      const engineeringTitle = workItemSummary.replace(/^\d{4}Q\d\s*-\s*\[[^\]]+\]\s*-\s*/, '').trim();
+      console.log('📝 Extracted title:', engineeringTitle);
+
+      // Use the linked stories that were fetched and added to workItem
+      const linkedStories = (workItem as any)?.linkedStories || [];
+      console.log('🔗 Linked stories found:', linkedStories);
+      console.log('📈 Number of linked stories:', linkedStories.length);
+
+      const storyDetails = linkedStories.length > 0
+          ? linkedStories.map((story: any) => `- **${story.summary}** (Assignee: ${story.assignee || 'Unassigned'})`).join('\n')
+          : '- No linked stories found for this epic';
+
+      console.log('✅ Generated story details:', storyDetails);
+
+      return `${engineeringTitle}
+
+The project embarked on a challenging journey to address complex technical hurdles and redefine our engineering capabilities. Initially scoped to tackle [specific technical challenge], the project faced significant obstacles including [key obstacles]. Under the leadership of [team leads], and with contributions from [key contributors], the team navigated through technical debt and made pivotal architectural decisions. The collaborative efforts of the engineering team were instrumental in overcoming these challenges, ensuring a robust and scalable solution.
+
+**Linked Stories/Tasks:**
+${storyDetails}
+
+Our engineering team has developed an innovative solution that leverages cutting-edge technology to deliver seamless user experiences. The implementation introduces intelligent automation, enhanced data processing capabilities, and intuitive interface improvements that significantly reduce time-to-value for our customers. This advancement positions us as the industry leader in providing comprehensive, user-centric solutions that drive measurable business outcomes.`
 
     default:
       return `# ${generatedTitle}

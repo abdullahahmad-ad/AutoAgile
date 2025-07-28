@@ -388,6 +388,12 @@ export function ContentStudio({ jiraConnection, devsAIConnection }: ContentStudi
         return 'Customer Webinar'
       case 'feature-newsletter':
         return 'Feature Newsletter'
+      case 'technical-documentation':
+        return 'Technical Documentation'
+      case 'stakeholder-update':
+        return 'Stakeholder Update'
+      case 'engineering-highlights':
+        return 'Engineering Highlights'
       default:
         return contentType
     }
@@ -838,6 +844,36 @@ export function ContentStudio({ jiraConnection, devsAIConnection }: ContentStudi
                     description="Newsletter content for feature announcement"
                     phase="Post-Completion"
                     icon="📰"
+                    workItem={detailedWorkItem}
+                    onGenerate={(contentType) => handleContentTypeSelect(contentType)}
+                    onConfigure={(contentType) => handleOpenInstructionSection(contentType)}
+                  />
+                  <ContentTypeCard
+                    type="technical-documentation"
+                    title="Technical Documentation"
+                    description="Technical documentation and specifications"
+                    phase="Documentation Phase"
+                    icon="📋"
+                    workItem={detailedWorkItem}
+                    onGenerate={(contentType) => handleContentTypeSelect(contentType)}
+                    onConfigure={(contentType) => handleOpenInstructionSection(contentType)}
+                  />
+                  <ContentTypeCard
+                    type="stakeholder-update"
+                    title="Stakeholder Update"
+                    description="Progress update for stakeholders"
+                    phase="Update Phase"
+                    icon="📈"
+                    workItem={detailedWorkItem}
+                    onGenerate={(contentType) => handleContentTypeSelect(contentType)}
+                    onConfigure={(contentType) => handleOpenInstructionSection(contentType)}
+                  />
+                  <ContentTypeCard
+                    type="engineering-highlights"
+                    title="Engineering Highlights"
+                    description="Key engineering achievements and updates"
+                    phase="Engineering Phase"
+                    icon="🔧"
                     workItem={detailedWorkItem}
                     onGenerate={(contentType) => handleContentTypeSelect(contentType)}
                     onConfigure={(contentType) => handleOpenInstructionSection(contentType)}
